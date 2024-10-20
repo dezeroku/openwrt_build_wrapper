@@ -48,26 +48,6 @@ function source_device_lib() {
 }
 
 function parse_env_args() {
-	if [ -z "${SCRIPTS_DIR:-}" ]; then
-		echo "SCRIPTS_DIR is required to be in env"
-		echo "Did you start the script properly?"
-		exit 1
-	fi
-
-	SCRIPTS_DIR="$(readlink -f "${SCRIPTS_DIR}")"
-
-	if [ -z "${DEVICE:-}" ]; then
-		echo "DEVICE is required to be in env" && exit 1
-	fi
-
-	if [ -d "${SCRIPTS_DIR}/../config/${DEVICE}" ]; then
-		DEVICE_CONFIG_DIR="$(readlink -f "${SCRIPTS_DIR}/../config/${DEVICE}")"
-	else
-		echoerr "${SCRIPTS_DIR}/../config/${DEVICE} directory does not exist"
-		echoerr "Did you create the config directory for ${DEVICE}?"
-		exit 1
-	fi
-
 	[ -z "${DEVICE_ENV_FILE:-}" ] && DEVICE_ENV_FILE="$(readlink -f "${DEVICE_CONFIG_DIR}/variables")"
 	DEVICE_ENV_FILE="$(readlink -f "${DEVICE_ENV_FILE}")"
 
@@ -94,7 +74,6 @@ function parse_env_args() {
 	[ -z "${DEVICE_CONFIG_FILE:-}" ] && DEVICE_CONFIG_FILE="$(readlink -f "${DEVICE_CONFIG_DIR}/config")"
 	DEVICE_CONFIG_FILE="$(readlink -f "${DEVICE_CONFIG_FILE}")"
 
-	echoerr "DEVICE=${DEVICE}"
 	echoerr "DEVICE_CONFIG_FILE=${DEVICE_CONFIG_FILE}"
 	echoerr "DEVICE_ENV_FILE=${DEVICE_ENV_FILE}"
 	if [ -n "${DEVICE_TEMPLATE_ENV_FILE:-}" ]; then
@@ -106,22 +85,22 @@ function parse_env_args() {
 	echoerr "REPRODUCE_UPSTREAM_BUILD=${REPRODUCE_UPSTREAM_BUILD}"
 
 	# Example file for reference
-	# shellcheck source=build/config/example/variables
+	# shellcheck source=config/example/variables
 	. "${DEVICE_ENV_FILE}"
 
 	if [ -z "${BUILDDIR:-}" ]; then
-		mkdir -p "${SCRIPTS_DIR}/../builds"
-		BUILDDIR="${SCRIPTS_DIR}/../builds/openwrt-${DEVICE}"
+		mkdir -p "${ROOT_DIR}/builds"
+		BUILDDIR="${ROOT_DIR}/builds/openwrt-${DEVICE}"
 	fi
 
 	if [ -z "${ARTIFACTS_DIR:-}" ]; then
-		ARTIFACTS_DIR="${SCRIPTS_DIR}/../artifacts"
+		ARTIFACTS_DIR="${ROOT_DIR}/artifacts"
 		mkdir -p "${ARTIFACTS_DIR}"
 	fi
 	ARTIFACTS_DIR="$(readlink -f "${ARTIFACTS_DIR}")"
 
 	if [ -z "${APPLIED_SYSUPGRADES_DIR:-}" ]; then
-		APPLIED_SYSUPGRADES_DIR="${SCRIPTS_DIR}/../applied-sysupgrades"
+		APPLIED_SYSUPGRADES_DIR="${ROOT_DIR}/applied-sysupgrades"
 		mkdir -p "${APPLIED_SYSUPGRADES_DIR}"
 	fi
 	APPLIED_SYSUPGRADES_DIR="$(readlink -f "${APPLIED_SYSUPGRADES_DIR}")"
@@ -142,3 +121,53 @@ function parse_env_args() {
 	export BUILDDIR
 	export OPENWRT_VERSION
 }
+
+function on_entry() {
+	if [ -z "${SCRIPTS_DIR:-}" ]; then
+		echo "SCRIPTS_DIR is required to be in env"
+		echo "Did you start the script properly?"
+		exit 1
+	fi
+
+	SCRIPTS_DIR="$(readlink -f "${SCRIPTS_DIR}")"
+	# Root of the repository containing the build wrapper (this repo)
+	ROOT_REPO_DIR="$(readlink -f "${SCRIPTS_DIR}/..")"
+
+	if [ -z "${DEVICE:-}" ]; then
+		echo "DEVICE is required to be in env" && exit 1
+	fi
+
+	echoerr "DEVICE=${DEVICE}"
+
+	# Look for device config OOT first and fallback to in-repo
+	# Based on where we find the device config, we assume the build and artifacts dirs later on
+	oot_root_dir="${ROOT_REPO_DIR}/../"
+	oot_device_config_dir="${oot_root_dir}/config/${DEVICE}"
+	in_tree_root_dir="${ROOT_REPO_DIR}"
+	in_tree_device_config_dir="${in_tree_root_dir}/config/${DEVICE}"
+
+	if [ -d "$oot_device_config_dir" ]; then
+		echoerr "OOT device config detected, using it"
+		ROOT_DIR="$(readlink -f "${oot_root_dir}")"
+	elif [ -d "${in_tree_device_config_dir}" ]; then
+		echoerr "Falling back to in-tree device config"
+		ROOT_DIR="$(readlink -f "${in_tree_root_dir}")"
+	else
+		echoerr "Neither ${oot_device_config_dir} nor ${in_tree_device_config_dir} directory exists"
+		echoerr "Did you create the config directory for ${DEVICE}?"
+		exit 1
+	fi
+
+	DEVICE_CONFIG_DIR="$(readlink -f "${ROOT_DIR}/config/${DEVICE}")"
+	# Root of the "whole context", this can be either same as ROOT_REPO_DIR or can include ROOT_REPO_DIR as a
+	# subdirectory in case of OOT builds
+	echoerr "ROOT_DIR=${ROOT_DIR}"
+	echoerr "DEVICE_CONFIG_DIR=${DEVICE_CONFIG_DIR}"
+
+	export SCRIPTS_DIR
+	export ROOT_DIR
+	export ROOT_REPO_DIR
+	export DEVICE_CONFIG_DIR
+}
+
+on_entry

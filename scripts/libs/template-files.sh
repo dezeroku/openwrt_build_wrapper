@@ -14,7 +14,7 @@ function template_files() {
 
 	local directory_to_template="$1"
 
-	GOMPLATE_COMMAND_SUFFIX="-d base=$(readlink -f "${SCRIPTS_DIR}/../config/common/template-variables.yaml")"
+	GOMPLATE_COMMAND_SUFFIX="-d base=$(readlink -f "${ROOT_REPO_DIR}/config/common/template-variables.yaml")"
 	GOMPLATE_MERGE_CONTEXT="base"
 
 	# Template the files

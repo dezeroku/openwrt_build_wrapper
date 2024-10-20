@@ -4,7 +4,7 @@ set -euo pipefail
 # Enter the shell in a build environment
 
 SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
-# shellcheck source=build/scripts/common.sh
+# shellcheck source=scripts/common.sh
 . "${SCRIPTS_DIR}"/common.sh
 
 echoerr "Build docker build environment image (development)"

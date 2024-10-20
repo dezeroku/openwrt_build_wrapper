@@ -3,7 +3,7 @@ set -e
 
 SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
 
-# shellcheck source=build/scripts/common.sh
+# shellcheck source=scripts/common.sh
 . "${SCRIPTS_DIR}"/common.sh
 parse_env_args
 
@@ -47,7 +47,7 @@ fi
 
 [ -f "${DEVICE_ENV_FILE}" ] && dump_file "${DEVICE_ENV_FILE}" "variables"
 
-dump_file "${SCRIPTS_DIR}/../config/common/template-variables.yaml" "base-template-variables.yaml"
+dump_file "${ROOT_REPO_DIR}/config/common/template-variables.yaml" "base-template-variables.yaml"
 
 if [ -n "${DEVICE_TEMPLATE_ENV_FILE:-}" ] && [ -f "${DEVICE_TEMPLATE_ENV_FILE}" ]; then
 	dump_file "${DEVICE_TEMPLATE_ENV_FILE}" "template-variables.yaml"

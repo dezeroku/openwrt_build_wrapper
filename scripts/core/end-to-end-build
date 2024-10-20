@@ -10,7 +10,7 @@ set -e
 
 SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
 
-# shellcheck source=build/scripts/common.sh
+# shellcheck source=scripts/common.sh
 . "${SCRIPTS_DIR}"/common.sh
 parse_env_args
 

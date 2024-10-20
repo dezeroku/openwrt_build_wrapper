@@ -24,7 +24,9 @@ On top of that utility scriptlets ([scripts/utils](scripts/utils)) are provided 
 5. entering interactive shell in the container
 
 The builds are performed based on the settings defined in the [config](config) directory, each device should have its own
-directory in there. More details about the directory layout can be found in the [docs/config.md](docs/config.md) file.
+directory in there. _config_ directory can exist either within the repo itself or outside of it (e.g. this repository can be added
+as a submodule in a different repo).
+More details about the directory layout can be found in the [docs/config.md](docs/config.md) file.
 
 [UCI configuration files](https://openwrt.org/docs/guide-user/base-system/uci) are generated for each device based on the YAML
 config files. More details about that can be found in the [docs/templating.md](docs/templating.md) file.

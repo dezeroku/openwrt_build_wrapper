@@ -5,11 +5,11 @@ set -euo pipefail
 
 SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
 
-# shellcheck source=build/scripts/common.sh
+# shellcheck source=scripts/common.sh
 . "${SCRIPTS_DIR}"/common.sh
 parse_env_args
 
 source_device_lib
 
-# shellcheck source=build/scripts/libs/diff-images-runner
+# shellcheck source=scripts/libs/diff-images-runner
 . "${SCRIPTS_DIR}/libs/diff-images-runner.sh"

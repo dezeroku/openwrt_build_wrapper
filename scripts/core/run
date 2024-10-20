@@ -3,7 +3,7 @@ set -e
 
 SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
 
-# shellcheck source=build/scripts/common.sh
+# shellcheck source=scripts/common.sh
 . "${SCRIPTS_DIR}/common.sh"
 #parse_env_args
 # just an excerpt
@@ -11,8 +11,8 @@ if [ -z "${DEVICE:-}" ]; then
 	echo "DEVICE is required to be in env" && exit 1
 fi
 if [ -z "${BUILDDIR:-}" ]; then
-	mkdir -p "${SCRIPTS_DIR}/../builds"
-	BUILDDIR="${SCRIPTS_DIR}/../builds/openwrt-${DEVICE}"
+	mkdir -p "${ROOT_DIR}/builds"
+	BUILDDIR="${ROOT_DIR}/builds/openwrt-${DEVICE}"
 fi
 
 [ -z "${DOCKER_IMAGE:-}" ] && DOCKER_IMAGE="openwrt-builder"
@@ -21,7 +21,7 @@ fi
 BUILDDIR_SUFFIX="$(basename "${BUILDDIR}")"
 
 if [ -z "${CCACHE_TARGET_STORAGE:-}" ]; then
-	CCACHE_TARGET_STORAGE="${SCRIPTS_DIR}/../builds/ccache-target-storage/${BUILDDIR_SUFFIX}"
+	CCACHE_TARGET_STORAGE="${ROOT_DIR}/builds/ccache-target-storage/${BUILDDIR_SUFFIX}"
 	[ -d "${CCACHE_TARGET_STORAGE}" ] || mkdir -p "${CCACHE_TARGET_STORAGE}"
 	CCACHE_TARGET_STORAGE="$(readlink -f "${CCACHE_TARGET_STORAGE}")"
 
@@ -29,7 +29,7 @@ if [ -z "${CCACHE_TARGET_STORAGE:-}" ]; then
 fi
 
 if [ -z "${CCACHE_HOST_STORAGE:-}" ]; then
-	CCACHE_HOST_STORAGE="${SCRIPTS_DIR}/../builds/sccache-host-storage/${BUILDDIR_SUFFIX}"
+	CCACHE_HOST_STORAGE="${ROOT_DIR}/builds/sccache-host-storage/${BUILDDIR_SUFFIX}"
 	[ -d "${CCACHE_HOST_STORAGE}" ] || mkdir -p "${CCACHE_HOST_STORAGE}"
 	CCACHE_HOST_STORAGE="$(readlink -f "${CCACHE_HOST_STORAGE}")"
 fi
@@ -53,7 +53,7 @@ if [[ "${NETWORK_LAYOUT_BUILD_SCRIPTS_CORE_RUN:-}" != "true" ]]; then
 		--ulimit 'nofile=1024:1048576' \
 		-e "SCCACHE_CACHE_SIZE=50G" \
 		-e "NETWORK_LAYOUT_BUILD_SCRIPTS_CORE_RUN=true" \
-		-v "${PWD}:${PWD}" \
+		-v "${ROOT_DIR}:${ROOT_DIR}" \
 		-v "${CCACHE_TARGET_STORAGE}:/ccache-storage" \
 		-v "${CCACHE_HOST_STORAGE}:/home/builder/.cache/sccache" \
 		"${DOCKER_IMAGE}" "$@"

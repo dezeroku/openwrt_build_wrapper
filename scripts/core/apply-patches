@@ -3,11 +3,11 @@ set -e
 
 SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
 
-# shellcheck source=build/scripts/common.sh
+# shellcheck source=scripts/common.sh
 . "${SCRIPTS_DIR}"/common.sh
 parse_env_args
 
-# shellcheck source=build/scripts/libs/template-files.sh
+# shellcheck source=scripts/libs/template-files.sh
 . "${SCRIPTS_DIR}"/libs/template-files.sh
 
 cd "${BUILDDIR}"

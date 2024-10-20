@@ -2,15 +2,16 @@
 
 set -e
 
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=scripts/common.sh
+. "${SCRIPTS_DIR}/common.sh"
+
 # For the version file generation
 SCRIPTS_VERSION="$(cd "${SCRIPTS_DIR}" && git describe HEAD --always)"
 export SCRIPTS_VERSION
 SCRIPTS_COMMIT="$(cd "${SCRIPTS_DIR}" && git rev-parse HEAD)"
 export SCRIPTS_COMMIT
-
-SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
-# shellcheck source=build/scripts/common.sh
-. "${SCRIPTS_DIR}/common.sh"
 
 # To not build docker image in end-to-end-build script
 export SKIP_DOCKER_SETUP=true

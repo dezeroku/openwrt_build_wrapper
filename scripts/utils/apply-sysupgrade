@@ -5,9 +5,9 @@ set -euo pipefail
 
 SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
 
-# shellcheck source=build/scripts/common.sh
+# shellcheck source=scripts/common.sh
 . "${SCRIPTS_DIR}"/common.sh
 parse_env_args
 
-# shellcheck source=build/scripts/libs/apply-sysupgrade.sh
+# shellcheck source=scripts/libs/apply-sysupgrade.sh
 . "${SCRIPTS_DIR}/libs/apply-sysupgrade.sh"
