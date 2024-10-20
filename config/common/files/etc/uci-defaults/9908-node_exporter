@@ -1,0 +1,6 @@
+{{- if has .node_exporter "listen_interface" }}
+uci set prometheus-node-exporter-lua.main.listen_interface='{{ .node_exporter.listen_interface }}'
+uci commit
+
+/etc/init.d/prometheus-node-exporter-lua restart
+{{- end }}

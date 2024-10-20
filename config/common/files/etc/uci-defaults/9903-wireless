@@ -1,0 +1,42 @@
+{{- if has . "wireless" }}
+uci batch << EOI
+
+{{- range $name, $config := .wireless.radios }}
+set wireless.{{ print $name }}.country='{{ $config.country }}'
+set wireless.radio0.cell_density='{{ $config.cell_density }}'
+{{- if $config.enabled }}
+set wireless.{{ print $name }}.disabled='0'
+{{ else }}
+set wireless.{{ print $name }}.disabled='1'
+{{- end }}
+# Disable the default broadcast assigned to a radio
+set wireless.default_{{ print $name }}.disabled='1'
+{{- end }}
+
+{{- range $name, $config := .wireless.networks }}
+{{ $sanitized_name := strings.ToLower (strings.ReplaceAll "-" "_" $name) }}
+set wireless.{{ print $sanitized_name }}=wifi-iface
+set wireless.{{ print $sanitized_name }}.device='{{ $config.device }}'
+set wireless.{{ print $sanitized_name }}.ssid='{{ $name }}'
+set wireless.{{ print $sanitized_name }}.mode='{{ $config.mode }}'
+set wireless.{{ print $sanitized_name }}.encryption='{{ $config.encryption }}'
+set wireless.{{ print $sanitized_name }}.key='{{ $config.key }}'
+{{- if $config.isolate }}
+set wireless.{{ print $sanitized_name }}.isolate='1'
+{{ else }}
+set wireless.{{ print $sanitized_name }}.isolate='0'
+{{- end }}
+set wireless.{{ print $sanitized_name }}.network='{{ $config.network }}'
+{{- if $config.enabled }}
+set wireless.{{ print $sanitized_name }}.disabled='0'
+{{ else }}
+set wireless.{{ print $sanitized_name }}.disabled='1'
+{{- end }}
+{{- end }}
+
+commit wireless
+EOI
+
+# To properly handle the changes
+/sbin/wifi reload
+{{- end }}

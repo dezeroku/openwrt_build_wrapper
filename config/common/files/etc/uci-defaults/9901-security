@@ -1,0 +1,21 @@
+passwd root << EOF
+{{ .security.root_password }}
+{{ .security.root_password }}
+EOF
+
+cat >> /etc/dropbear/authorized_keys << EOI
+{{- range .security.ssh.keys }}
+{{ . }}
+{{- end }}
+EOI
+
+uci batch << EOI
+{{- if has .security.ssh "interface" }}
+set dropbear.@dropbear[0].Interface='{{ .security.ssh.interface }}'
+{{- end }}
+set dropbear.@dropbear[0].PasswordAuth='off'
+set dropbear.@dropbear[0].RootPasswordAuth='off'
+commit dropbear
+EOI
+
+/etc/init.d/dropbear restart

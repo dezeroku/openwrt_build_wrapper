@@ -1,0 +1,32 @@
+set -e
+
+{{- if .letsencrypt.enabled }}
+uci set acme.@acme[0].account_email='{{ .letsencrypt.acme.email }}'
+
+uci -q get acme.routerhostname && uci del acme.routerhostname
+
+uci set acme.routerhostname=cert
+uci set acme.routerhostname.enabled='1'
+uci set acme.routerhostname.keysize='rsa2048'
+{{- if eq .letsencrypt.acme.verification_method "dns_aws" }}
+uci set acme.routerhostname.validation_method='dns'
+uci set acme.routerhostname.dns='dns_aws'
+uci add_list acme.routerhostname.credentials='AWS_ACCESS_KEY_ID={{ .letsencrypt.acme.route53.access_key_id }}'
+uci add_list acme.routerhostname.credentials='AWS_SECRET_ACCESS_KEY={{ .letsencrypt.acme.route53.access_key_secret }}'
+{{- end }}
+
+uci add_list acme.routerhostname.domains='{{ .hostname }}.{{ .letsencrypt.domain }}'
+uci set acme.routerhostname.days='90'
+{{- if .letsencrypt.acme.use_staging }}
+uci set acme.routerhostname.use_staging='1'
+{{ else }}
+uci set acme.routerhostname.use_staging='0'
+{{- end }}
+
+uci commit acme
+
+# Make sure that it's set
+uci set uhttpd.main.redirect_https='on'
+
+uci commit uhttpd
+{{- end }}

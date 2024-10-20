@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}"/common.sh
+parse_env_args
+
+[ -z "${NEW_OPENWRT_VERSION:-}" ] && echo "No NEW_OPENWRT_VERSION provided" && exit 1
+
+OLD_VERSION="$(grep "OPENWRT_VERSION" <"${DEVICE_ENV_FILE}" | cut -d "=" -f2)"
+NEW_VERSION="${NEW_OPENWRT_VERSION}"
+
+echoerr "Bumping from ${OLD_VERSION} to ${NEW_VERSION}"
+
+sed "s/OPENWRT_VERSION=.*/OPENWRT_VERSION=\"${NEW_VERSION}\"/" "${DEVICE_ENV_FILE}" -i
+
+echoerr "Obtaining new config.buildinfo"
+
+# We don't want the envsubst expression to be substituted
+# shellcheck disable=SC2016
+CONFIG_BUILDINFO_URL=$(grep -o "\[config.orig\]\(.*\)" <"$(dirname "${DEVICE_ENV_FILE}")/README.md" | cut -d "(" -f2 | cut -d ")" -f1 | OPENWRT_VERSION=${NEW_VERSION#v} envsubst '${OPENWRT_VERSION}')
+
+curl "${CONFIG_BUILDINFO_URL}" >"${DEVICE_CONFIG_FILE}.orig"
+
+BUILDDIR="$(readlink -f "${SCRIPTS_DIR}/../builds/openwrt-${DEVICE}-openwrt-update-${NEW_VERSION}")"
+export BUILDDIR
+
+echoerr "Using BUILDDIR: ${BUILDDIR}"
+
+ONLY_INITIALIZE_WORKSPACE=true "${SCRIPTS_DIR}/core/entrypoint"
+
+"${SCRIPTS_DIR}/utils/generate-diffconfig" >"${DEVICE_CONFIG_FILE}"
+
+echoerr "Now check the modified ${DEVICE_CONFIG_FILE} and ${DEVICE_CONFIG_FILE}.orig for changes and run the build as usual"

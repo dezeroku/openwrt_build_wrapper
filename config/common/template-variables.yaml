@@ -1,0 +1,158 @@
+# Values that can be considered "secrets", provided in this file are exemplary
+# secret-variables.yaml file with appropriate overrides should be created
+
+network:
+  globals: {}
+  # ula_prefix: "fd6d:8246:307d::/48"
+  # packet_steering: true
+
+hostname: somerouter
+timezone:
+  zonename: Europe/Warsaw
+  definition: CET-1CEST,M3.5.0,M10.5.0/3
+
+letsencrypt:
+  enabled: false
+  domain: example.com
+  acme:
+    use_staging: false
+    email: user@example.com
+    # This is tailored specifically for Route53 at the moment
+    verification_method: dns_aws
+    route53:
+      access_key_id: your-key-id
+      access_key_secret: your-key-secret
+
+security:
+  root_password: "example_password"
+  ssh:
+    keys: []
+    # interface: lan
+
+networks: {}
+#  example:
+#    device: br-lan
+#    ipaddr: 192.168.13.1
+#    gateway: 192.168.13.1
+#    netmask: 255.255.255.0
+#    vlan:
+#      id: 13
+#      ports:
+#        - eth2:t
+#    type: bridge
+#    # If set to true, mdns requests from the network
+#    # will be broadcasted to the different ones
+#    # This setting requires a separate firewall rule to work properly
+#    broadcast_mdns: false
+#    collect_dns_statistics: false
+#    firewall:
+#      zone:
+#        input: REJECT
+#        output: ACCEPT
+#        forward: REJECT
+#      forwarding:
+#        - wan
+
+# This is similar to networks in a way
+# but differs enough that it's worth to separate it
+vpns: {}
+#  example:
+#    interface:
+#      proto: wireguard
+#      force_link: true
+#      # All of this is exemplary, don't get your hopes up :D
+#      private_key: iG/zFGNWekkpyt2bwwmYWjfu/xKrHpkS4XNWnjxaWnA=
+#      listen_port: 12345
+#      addresses:
+#        - 192.168.20.1/24
+#    firewall:
+#      add_rule_for_wan_access: true
+#      zone:
+#        input: REJECT
+#        output: ACCEPT
+#        forward: REJECT
+#      forwarding:
+#        - wan
+#    clients: {}
+#     example_client:
+#       public_key: key
+#       preshared_key: key
+#       persistent_keepalive: 25
+#       allowed_ips:
+#         - some-ip/32
+#       description: Some client
+
+#wireless:
+#  radios:
+#    radio0:
+#      country: PL
+#      enabled: false
+#      cell_density: 0
+#  networks: {}
+#   SomeNetworkRecovery:
+#     device: radio0
+#     mode: ap
+#     encryption: sae-mixed
+#     key: example_key
+#     isolate: true
+#     network: lan
+#     enabled: false
+
+dhcp:
+  # This will be overriden by https-dns-proxy anyway
+  default_dns_server: 1.1.1.1
+  hosts: {}
+  # example:
+  #   mac: 'XX:XX:XX:XX:XX:XX'
+  #   ip: '192.168.1.23'
+  #   dns: true
+
+  domains: {}
+  # example.com:
+  #   ip: '192.168.1.23'
+
+  # https://openwrt.org/docs/guide-user/base-system/dhcp_configuration#a_and_aaaa_rr
+  addresses: {}
+#   example:
+#     - 192.168.1.21
+#     - 192.168.1.22
+
+firewall:
+  rules: {}
+#   example:
+#     name: I am an example!
+#     src: lan
+#     # Empty list matches all IPs
+#     src_ip: []
+#     # Empty list matches all ports
+#     src_port: []
+#     # Empty list matches all protocols
+#     proto: []
+#     dest: iot
+#     dest_ip: []
+#     dest_port: []
+#     target: 'ACCEPT'
+#     enabled: false
+
+statistics:
+  ping:
+    enabled: false
+    interval: 60
+    hosts: []
+  dns:
+    enabled: false
+  thermal:
+    enabled: true
+  ipstatistics:
+    enabled: true
+  df:
+    enabled: true
+
+node_exporter: {}
+# listen_interface: "some-interface"
+
+# This is a placeholder for scripting
+# that doesn't really suit any other place
+# Don't use it if it can be avoided, it's just
+# copy-pasted into one of the startup scripts
+custom_commands: ""

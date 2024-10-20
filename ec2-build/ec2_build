@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Just run `ec2_build <command you want to run remotely>`
+# e.g. `ec2_build ls`
+# Remember that you need to do the proper escapes
+
+set -euxo pipefail
+
+RUNDIR="$(readlink -f "$(dirname "$0")")"
+pushd "${RUNDIR}"
+
+IP="$(terraform output -raw instance_public_dns)"
+
+pushd "${RUNDIR}/.."
+
+# Sync the important stuff from local working dir
+rsync -v -aR --delete ./scripts ./docker-setup ./config "ec2-user@$IP:/home/ec2-user/network_layout/build"
+
+# shellcheck disable=SC2087
+exec ssh -tt "ec2-user@$IP" bash <<EOF
+cd network_layout/build
+$@
+EOF

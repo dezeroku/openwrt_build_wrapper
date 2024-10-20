@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}"/common.sh
+parse_env_args
+
+# shellcheck source=build/scripts/libs/template-files.sh
+. "${SCRIPTS_DIR}"/libs/template-files.sh
+
+cd "${BUILDDIR}"
+
+if [[ ! "${REPRODUCE_UPSTREAM_BUILD}" == "true" ]]; then
+	DEVICE_PATCHES_DIR="${DEVICE_CONFIG_DIR}/patches"
+	if [ ! -d "${DEVICE_PATCHES_DIR}" ]; then
+		echo "${DEVICE_PATCHES_DIR} directory does not exist, not applying patches"
+	else
+		# First we'll copy the patches to this directory and template them
+		# Then we'll apply the templates patches on top of the build root
+		TEMP_PATCHES_DIR="$(mktemp -d)"
+
+		# Copy files from device specific config dir
+		cp -r "${DEVICE_PATCHES_DIR}/"* "${TEMP_PATCHES_DIR}"
+
+		template_files "${TEMP_PATCHES_DIR}"
+
+		# Apply a patches from each subdir, by going to the same subdir in build dir first
+		# There are two types of patches:
+		# * .patch that should be applied with 'git am'
+		# * .sh that should just be executed
+		# Display a warning for all the other file types
+		find "${TEMP_PATCHES_DIR}" -type f -printf "%P\n" | sort | while read -r file; do
+			subdir="$(dirname "${file}")"
+			filename="$(basename "${file}")"
+
+			if [ -n "${subdir}" ]; then
+				echoerr "cd: ${subdir}"
+				cd "${BUILDDIR}/${subdir}"
+			fi
+
+			if [[ "${filename}" =~ .*\.patch ]]; then
+				# Set info every time, as we might go into a submodule
+				# And I don't want to use --global here
+				set_git_info
+
+				git am <"${TEMP_PATCHES_DIR}/${file}"
+			elif [[ "${filename}" =~ .*\.sh ]]; then
+				bash "${TEMP_PATCHES_DIR}/${file}"
+			else
+				echoerr "Unsupported patch extension, skipping: ${filename}"
+			fi
+
+			cd "${BUILDDIR}"
+		done
+	fi
+else
+	echoerr "Skipping applying patches because of REPRODUCE_UPSTREAM_BUILD=true"
+fi

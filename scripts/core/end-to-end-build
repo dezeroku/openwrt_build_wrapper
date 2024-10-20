@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+set -e
+
+[ -z "${SLEEP_BETWEEN_STAGES}" ] && SLEEP_BETWEEN_STAGES=0
+[ -z "${SKIP_DOWNLOADS:-}" ] && SKIP_DOWNLOADS="false"
+[ -z "${SKIP_COPYING_ARTIFACTS:-}" ] && SKIP_COPYING_ARTIFACTS="false"
+[ -z "${SKIP_VERSION_FILE_GENERATION:-}" ] && SKIP_VERSION_FILE_GENERATION="false"
+[ -z "${ONLY_INITIALIZE_WORKSPACE:-}" ] && ONLY_INITIALIZE_WORKSPACE="false"
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}"/common.sh
+parse_env_args
+
+if [[ ! "${SKIP_DOCKER_SETUP}" == "true" ]]; then
+	echoerr "Build docker build environment image"
+	sleep "${SLEEP_BETWEEN_STAGES}"
+	"${SCRIPTS_DIR}/core/setup-image"
+fi
+
+if [[ ! "${SKIP_DOWNLOADS}" == "true" ]]; then
+	echoerr "Clone the openwrt repo"
+	sleep "${SLEEP_BETWEEN_STAGES}"
+	"${SCRIPTS_DIR}/core/clone"
+else
+	echoerr "Skipping cloning because of SKIP_DOWNLOADS=true"
+fi
+
+echoerr "Reset repo to commit: ${OPENWRT_VERSION}"
+sleep "${SLEEP_BETWEEN_STAGES}"
+"${SCRIPTS_DIR}/core/repo-reset"
+
+if [[ ! "${SKIP_DOWNLOADS}" == "true" ]]; then
+	echoerr "Update source feeds"
+	sleep "${SLEEP_BETWEEN_STAGES}"
+	"${SCRIPTS_DIR}/core/update-feeds"
+else
+	echoerr "Skipping feeds update because of SKIP_DOWNLOADS=true"
+fi
+
+echoerr "Copy config for ${DEVICE}"
+sleep "${SLEEP_BETWEEN_STAGES}"
+"${SCRIPTS_DIR}/core/copy-config"
+
+echoerr "Apply buildroot patches"
+sleep "${SLEEP_BETWEEN_STAGES}"
+"${SCRIPTS_DIR}/core/apply-patches"
+
+echoerr "Template custom files"
+sleep "${SLEEP_BETWEEN_STAGES}"
+"${SCRIPTS_DIR}/core/template-files"
+
+if [[ ! "${SKIP_VERSION_FILE_GENERATION}" == "true" ]]; then
+	echoerr "Generating version file"
+	sleep "${SLEEP_BETWEEN_STAGES}"
+	mkdir -p "${BUILDDIR}/files/etc/"
+	"${SCRIPTS_DIR}/core/generate-version-file" >"${BUILDDIR}/files/etc/custom-version-file"
+else
+	echoerr "Skipping version file generation because of SKIP_VERSION_FILE_GENERATION=true"
+fi
+
+if [[ "${ONLY_INITIALIZE_WORKSPACE}" == "true" ]]; then
+	echoerr "Stopping before build, because ONLY_INITIALIZE_WORKSPACE=true"
+	exit 0
+fi
+
+if [[ ! "${SKIP_DOWNLOADS}" == "true" ]]; then
+	echoerr "Download source code"
+	sleep "${SLEEP_BETWEEN_STAGES}"
+	"${SCRIPTS_DIR}/core/build-download-sources"
+else
+	echoerr "Skipping source code download because of SKIP_DOWNLOADS=true"
+fi
+
+echoerr "Compile the final image"
+sleep "${SLEEP_BETWEEN_STAGES}"
+"${SCRIPTS_DIR}/core/build-compile"
+
+if [[ ! "${SKIP_COPYING_ARTIFACTS}" == "true" ]]; then
+	echoerr "Copy artifacts"
+	sleep "${SLEEP_BETWEEN_STAGES}"
+	"${SCRIPTS_DIR}/core/copy-artifacts"
+else
+	echoerr "Skipping copying artifacts because of SKIP_COPYING_ARTIFACTS=true"
+fi

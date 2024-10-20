@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Apply a sysupgrade file on the router
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}"/common.sh
+parse_env_args
+
+# shellcheck source=build/scripts/libs/apply-sysupgrade.sh
+. "${SCRIPTS_DIR}/libs/apply-sysupgrade.sh"

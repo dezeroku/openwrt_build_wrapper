@@ -1,0 +1,8 @@
+FROM openwrt-builder
+
+USER root
+RUN apt-get update && \
+        apt-get install -y \
+        neovim
+
+USER buildbot

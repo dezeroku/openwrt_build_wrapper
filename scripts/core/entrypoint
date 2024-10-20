@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -e
+
+# For the version file generation
+SCRIPTS_VERSION="$(cd "${SCRIPTS_DIR}" && git describe HEAD)"
+export SCRIPTS_VERSION
+SCRIPTS_COMMIT="$(cd "${SCRIPTS_DIR}" && git rev-parse HEAD)"
+export SCRIPTS_COMMIT
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}/common.sh"
+
+# To not build docker image in end-to-end-build script
+export SKIP_DOCKER_SETUP=true
+
+echoerr "Build docker build environment image"
+"${SCRIPTS_DIR}/core/setup-image"
+
+# To use the timestamp with host's timezone
+ARTIFACTS_TIMESTAMP="$(date +%Y_%m_%dT%H_%M_%S)"
+export ARTIFACTS_TIMESTAMP
+
+"${SCRIPTS_DIR}/core/run" "${SCRIPTS_DIR}/core/end-to-end-build"

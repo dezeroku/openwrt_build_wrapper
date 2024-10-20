@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# You should make run that 'make defconfig' was run first, for best reproducibility
+# 1. generate "normal" diffconfig based on current .config
+# 2. Remove lines that are already present in device specific config.orig
+
+# Depends on:
+# 1. dos2unix
+# 2. combine
+
+set -e
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}/common.sh"
+parse_env_args
+
+TMPFILE_DIRTY="$(mktemp)"
+TMPFILE="$(mktemp)"
+
+"${SCRIPTS_DIR}/core/run" bash -c "cd ${BUILDDIR} && ./scripts/diffconfig.sh" >"${TMPFILE_DIRTY}"
+
+# sanitize generated diffconfig
+ADDITIONAL_DOCKER_FLAGS="-v ${TMPFILE_DIRTY}:${TMPFILE_DIRTY}" "${SCRIPTS_DIR}/core/run" bash -c "dos2unix < ${TMPFILE_DIRTY}" >"${TMPFILE}"
+
+TMPFILE_CONFIG_ORIG="$(mktemp)"
+# TODO: It's a bit ugly, as tmp on host doesn't necessarily mean it's also tmp in container
+# But should be enough for the time being
+
+export ADDITIONAL_DOCKER_FLAGS="-v ${TMPFILE}:${TMPFILE} -v ${SCRIPTS_DIR}/../config/${DEVICE}/config.orig:${TMPFILE_CONFIG_ORIG}"
+"${SCRIPTS_DIR}/core/run" combine "${TMPFILE}" not "${TMPFILE_CONFIG_ORIG}"

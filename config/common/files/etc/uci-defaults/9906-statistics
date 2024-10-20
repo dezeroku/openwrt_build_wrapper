@@ -1,0 +1,74 @@
+uci batch << EOI
+set luci_statistics.collectd.Include='/etc/collectd/conf.d/*.conf'
+
+{{- if .statistics.ipstatistics.enabled }}
+set luci_statistics.collectd_ipstatistics.enable='1'
+{{ else }}
+set luci_statistics.collectd_ipstatistics.enable='0'
+{{- end }}
+
+{{- if .statistics.thermal.enabled }}
+set luci_statistics.collectd_thermal.enable='1'
+{{ else }}
+set luci_statistics.collectd_thermal.enable='0'
+{{- end }}
+
+{{- if .statistics.df.enabled }}
+set luci_statistics.collectd_df.enable='1'
+{{ else }}
+set luci_statistics.collectd_df.enable='0'
+{{- end }}
+
+{{- if .statistics.dns.enabled }}
+set luci_statistics.collectd_dns.enable='1'
+del luci_statistics.collectd_dns.Interfaces
+{{- range $name, $config := .networks }}
+{{/*
+    Default to collecting statistics from every interface
+    if needed this feature can be explicitly disabled on the
+    network configuration's level.
+*/}}
+{{- if has $config "collect_dns_statistics" }}
+{{- if $config.collect_dns_statistics }}
+{{- if has $config "vlan" }}
+add_list luci_statistics.collectd_dns.Interfaces='{{ $config.device }}.{{ $config.vlan.id }}'
+{{ else }}
+add_list luci_statistics.collectd_dns.Interfaces='{{ $config.device }}'
+{{- end }}
+{{- end }}
+{{ else }}
+{{- if has $config "vlan" }}
+add_list luci_statistics.collectd_dns.Interfaces='{{ $config.device }}.{{ $config.vlan.id }}'
+{{ else }}
+add_list luci_statistics.collectd_dns.Interfaces='{{ $config.device }}'
+{{- end }}
+{{- end }}
+{{- end }}
+{{ else }}
+set luci_statistics.collectd_dns.enable='0'
+{{- end }}
+
+{{- range $name, $config := .vpns }}
+{{- if has $config "collect_dns_statistics" }}
+{{- if $config.collect_dns_statistics }}
+add_list luci_statistics.collectd_dns.Interfaces='{{ $name }}'
+{{- end }}
+{{ else }}
+add_list luci_statistics.collectd_dns.Interfaces='{{ $name }}'
+{{- end }}
+{{- end }}
+
+{{- if .statistics.ping.enabled }}
+set luci_statistics.collectd_ping.enable='1'
+del luci_statistics.collectd_ping.Hosts
+{{- range .statistics.ping.hosts }}
+add_list luci_statistics.collectd_ping.Hosts='{{ . }}'
+{{- end }}
+set luci_statistics.collectd_ping.AddressFamily='any'
+set luci_statistics.collectd_ping.Interval='{{ .statistics.ping.interval }}'
+{{ else }}
+set luci_statistics.collectd_ping.enable='0'
+{{- end }}
+
+commit luci_statistics
+EOI

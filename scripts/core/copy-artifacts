@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}"/common.sh
+parse_env_args
+
+cd "${BUILDDIR}"
+
+[ -z "${ARTIFACTS_TIMESTAMP:-}" ] && ARTIFACTS_TIMESTAMP="$(date -u +%Y_%m_%dT%H_%M_%S%Z)"
+
+TARGET_DIR="${ARTIFACTS_DIR}/${DEVICE}/${ARTIFACTS_TIMESTAMP}"
+TARGET_DIR_LAST="${ARTIFACTS_DIR}/${DEVICE}/last"
+
+mkdir -p "${ARTIFACTS_DIR}/${DEVICE}"
+cp -r "${BUILDDIR}/bin" "$TARGET_DIR"
+
+if [[ ! -e "${TARGET_DIR_LAST}" ]]; then
+	ln -s "${TARGET_DIR}" "${TARGET_DIR_LAST}"
+elif [[ -L "${TARGET_DIR_LAST}" && -d "${TARGET_DIR_LAST}" ]]; then
+	rm "${TARGET_DIR_LAST}"
+	ln -s "${TARGET_DIR}" "${TARGET_DIR_LAST}"
+else
+	echoerr "Not creating a link: ${TARGET_DIR_LAST}, because of a file already present there"
+fi

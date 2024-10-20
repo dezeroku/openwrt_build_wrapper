@@ -1,0 +1,62 @@
+# In case we run this on a switch
+if [ -f /etc/init.d/dnsmasq ]; then
+
+uci batch << EOI
+set dhcp.@dnsmasq[0].server='{{ .dhcp.default_dns_server }}'
+
+{{ range $name, $config := .networks }}
+{{- if has $config "dhcp" }}
+set dhcp.{{ print $name }}=dhcp
+set dhcp.{{ print $name }}.interface='{{ $name }}'
+set dhcp.{{ print $name }}.start='{{ $config.dhcp.start }}'
+set dhcp.{{ print $name }}.limit='{{ $config.dhcp.limit }}'
+set dhcp.{{ print $name }}.leasetime='{{ $config.dhcp.leasetime }}'
+{{- if has $config.dhcp "ra_flags" }}
+del dhcp.{{ print $name }}.ra_flags
+{{- range $config.dhcp.ra_flags }}
+add_list dhcp.{{ print $name }}.ra_flags='{{ . }}'
+{{- end }}
+{{- end }}
+{{- end }}
+{{ end }}
+
+{{ range $name, $config := .dhcp.hosts }}
+{{ $sanitized_name := strings.ReplaceAll "-" "_" $name }}
+set dhcp.{{ print $sanitized_name }}=host
+set dhcp.{{ print $sanitized_name }}.mac='{{ $config.mac }}'
+set dhcp.{{ print $sanitized_name }}.ip='{{ $config.ip }}'
+set dhcp.{{ print $sanitized_name }}.name='{{ $name }}'
+{{ if has $config "dns" -}}
+{{ if $config.dns -}}
+set dhcp.{{ print $sanitized_name }}.dns='1'
+{{ else }}
+set dhcp.{{ print $sanitized_name }}.dns='0'
+{{ end -}}
+{{ end -}}
+{{ end }}
+
+{{- range $name, $config := .dhcp.domains }}
+{{ $sanitized_name := strings.ReplaceAll "." "_" $name }}
+set dhcp.{{ print $sanitized_name }}=domain
+set dhcp.{{ print $sanitized_name }}.ip='{{ $config.ip }}'
+set dhcp.{{ print $sanitized_name }}.name='{{ $name }}'
+{{- end }}
+
+{{ range $name, $config := .dhcp.addresses }}
+{{ $sanitized_name := strings.ReplaceAll "." "_" $name }}
+{{- range $config }}
+add_list dhcp.@dnsmasq[0].address='/{{ print $name }}/{{ . }}'
+{{- end }}
+{{ end }}
+
+commit dhcp
+EOI
+
+fi
+
+if [ -f /etc/init.d/dnsmasq ]; then
+    /etc/init.d/dnsmasq reload
+fi
+if [ -f /etc/init.d/odhcpd ]; then
+    /etc/init.d/odhcpd reload
+fi

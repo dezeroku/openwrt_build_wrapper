@@ -1,0 +1,22 @@
+set -e
+
+{{- if .letsencrypt.enabled }}
+uci set system.@system[0].hostname='{{ .hostname }}.{{ .letsencrypt.domain }}'
+uci commit system
+{{ else }}
+uci set system.@system[0].hostname='{{ .hostname }}'
+uci commit system
+{{- end }}
+
+uci batch << EOI
+set system.@system[0].zonename='{{ .timezone.zonename }}'
+set system.@system[0].timezone='{{ .timezone.definition }}'
+set system.@system[0].log_proto='udp'
+set system.@system[0].conloglevel='8'
+set system.@system[0].cronloglevel='5'
+commit system
+
+set uhttpd.main.redirect_https='on'
+commit uhttpd
+
+EOI

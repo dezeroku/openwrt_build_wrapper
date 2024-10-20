@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}"/common.sh
+parse_env_args
+
+# shellcheck source=build/scripts/libs/template-files.sh
+. "${SCRIPTS_DIR}"/libs/template-files.sh
+
+cd "${BUILDDIR}"
+
+# Remove the custom files present
+rm -rf "${BUILDDIR}/files"
+if [[ ! "${REPRODUCE_UPSTREAM_BUILD}" == "true" ]]; then
+	# Copy files from common config dir
+	echoerr "Copying common files from ${SCRIPTS_DIR}/../config/common/files"
+	cp -r "${SCRIPTS_DIR}/../config/common/files" "${BUILDDIR}/files"
+
+	# Copy files from device specific config dir
+	if [ -d "${DEVICE_CONFIG_DIR}/files" ]; then
+		echoerr "Copying device-specific files from ${DEVICE_CONFIG_DIR}/files"
+		cp -r "${DEVICE_CONFIG_DIR}/files/"* "${BUILDDIR}/files"
+	fi
+
+	template_files "${BUILDDIR}/files"
+else
+	echoerr "Skipping copying custom files because of REPRODUCE_UPSTREAM_BUILD=true"
+fi

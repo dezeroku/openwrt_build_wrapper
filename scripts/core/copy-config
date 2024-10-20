@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}"/common.sh
+parse_env_args
+
+cd "${BUILDDIR}"
+
+# Copy the base upstream config, modifications and then expand
+cat "${DEVICE_CONFIG_DIR}/config.orig" >.config
+if [[ ! "${REPRODUCE_UPSTREAM_BUILD}" == "true" ]]; then
+	if [ -f "${DEVICE_CONFIG_FILE}" ]; then
+		echoerr "Applying ${DEVICE_CONFIG_FILE}" on top of original .config
+		cat "${DEVICE_CONFIG_FILE}" >>.config
+	fi
+else
+	echoerr "Skipping custom .config because of REPRODUCE_UPSTREAM_BUILD=true"
+fi
+
+"${SCRIPTS_DIR}/core/run" make defconfig

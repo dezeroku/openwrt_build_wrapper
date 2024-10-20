@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
+
+# shellcheck source=build/scripts/common.sh
+. "${SCRIPTS_DIR}"/common.sh
+parse_env_args
+
+TMPDIR="$(mktemp -d)"
+
+export ADDITIONAL_DOCKER_FLAGS="-v ${TMPDIR}:/generate-ssh-keys"
+"${SCRIPTS_DIR}/core/run" dropbearkey -t rsa -s 4096 -f /generate-ssh-keys/dropbear_rsa_host_key
+"${SCRIPTS_DIR}/core/run" dropbearkey -t ed25519 -f /generate-ssh-keys/dropbear_ed25519_host_key
+
+DEVICE_DROPBEAR_DIR="${DEVICE_CONFIG_DIR}/files/etc/dropbear"
+
+mkdir -p "${DEVICE_DROPBEAR_DIR}"
+
+declare -a key_types=("rsa" "ed25519")
+
+TMPFILE="$(mktemp)"
+
+for key in "${key_types[@]}"; do
+	DROPBEAR_KEY_PATTERN="dropbear_${key}_host_key"
+	DEVICE_DROPBEAR_KEY_PATH="${DEVICE_DROPBEAR_DIR}/${DROPBEAR_KEY_PATTERN}"
+	if [ -f "${DEVICE_DROPBEAR_KEY_PATH}" ]; then
+		echoerr "Not overriding existing ${DEVICE_DROPBEAR_KEY_PATH}"
+	else
+		mv "${TMPDIR}/${DROPBEAR_KEY_PATTERN}" "${DEVICE_DROPBEAR_KEY_PATH}"
+	fi
+	echo "${DROPBEAR_KEY_PATTERN}" >>"${TMPFILE}"
+done
+
+mv "${TMPFILE}" "${DEVICE_DROPBEAR_DIR}/.gitignore"

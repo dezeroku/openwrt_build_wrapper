@@ -1,0 +1,87 @@
+set -ex
+
+# Set up zones for networks
+{{- range $name, $config := coll.Merge .networks .vpns }}
+{{- if has $config "firewall" }}
+uci set firewall.{{ print $name }}_zone=zone
+uci set firewall.{{ print $name }}_zone.name='{{ print $name }}'
+uci set firewall.{{ print $name }}_zone.input='{{ $config.firewall.zone.input }}'
+uci set firewall.{{ print $name }}_zone.output='{{ $config.firewall.zone.output }}'
+uci set firewall.{{ print $name }}_zone.forward='{{ $config.firewall.zone.forward }}'
+uci set firewall.{{ print $name }}_zone.network='{{ print $name }}'
+
+{{- if has $config.firewall "forwarding" }}
+{{- range $config.firewall.forwarding }}
+uci set firewall.{{ print $name }}_to_{{ . }}_forwarding=forwarding
+uci set firewall.{{ print $name }}_to_{{ . }}_forwarding.src='{{ print $name }}'
+uci set firewall.{{ print $name }}_to_{{ . }}_forwarding.dest='{{ . }}'
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- range $name, $config := .vpns }}
+{{- if eq $config.interface.proto "wireguard" }}
+{{- if $config.firewall.add_rule_for_wan_access }}
+uci set firewall.allow_wan_to_{{ print $name }}=rule
+uci set firewall.allow_wan_to_{{ print $name }}.name='allow_wan_to_{{ print $name }}'
+uci set firewall.allow_wan_to_{{ print $name }}.proto='udp'
+uci set firewall.allow_wan_to_{{ print $name }}.src='wan'
+uci set firewall.allow_wan_to_{{ print $name }}.dest_port='{{ $config.interface.listen_port }}'
+uci set firewall.allow_wan_to_{{ print $name }}.target='ACCEPT'
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{ range $name, $config := .firewall.rules }}
+uci -q delete firewall.{{ print $name }} || true
+uci set firewall.{{ print $name }}=rule
+  {{- if has $config "name" }}
+uci set firewall.{{ print $name }}.name='{{ $config.name }}'
+  {{ else }}
+uci set firewall.{{ print $name }}.name='{{ print $name }}'
+  {{- end }}
+  {{- if has $config "src" }}
+uci set firewall.{{ print $name }}.src='{{ $config.src }}'
+  {{- end }}
+  {{- if has $config "src_ip" }}
+    {{- range $config.src_ip }}
+uci add_list firewall.{{ print $name }}.src_ip='{{ . }}'
+    {{- end }}
+  {{- end }}
+  {{- if has $config "src_port" }}{{- if not (eq 0 (len $config.src_port)) -}}
+    {{/* For some reason src_port is a single string, while src_ip is a list */}}
+uci set firewall.{{ print $name }}.src_port='{{ join $config.src_port " " }}'
+  {{- end -}}{{- end }}
+  {{- if has $config "proto" }}
+    {{- range $config.proto }}
+uci add_list firewall.{{ print $name }}.proto='{{ . }}'
+    {{- end }}
+  {{- end }}
+  {{- if has $config "dest" }}
+uci set firewall.{{ print $name }}.dest='{{ $config.dest }}'
+  {{- end }}
+  {{- if has $config "dest_ip" }}
+    {{- range $config.dest_ip }}
+uci add_list firewall.{{ print $name }}.dest_ip='{{ . }}'
+    {{- end }}
+  {{- end }}
+  {{- if has $config "dest_port" }}{{- if not (eq 0 (len $config.dest_port)) -}}
+    {{/* For some reason dest_port is a single string, while dest_ip is a list */}}
+uci set firewall.{{ print $name }}.dest_port='{{ join $config.dest_port " " }}'
+  {{- end -}}{{- end }}
+uci set firewall.{{ print $name }}.target='{{ $config.target }}'
+  {{- if has $config "enabled" }}
+    {{- if $config.enabled }}
+uci set firewall.{{ print $name }}.enabled='1'
+    {{ else }}
+uci set firewall.{{ print $name }}.enabled='0'
+    {{- end }}
+  {{- end }}
+{{ end }}
+
+uci commit firewall
+
+# Use restart instead of reload as fw4 may not yet be started?
+# This causes the init script to fail when run initially on boot
+/etc/init.d/firewall restart
