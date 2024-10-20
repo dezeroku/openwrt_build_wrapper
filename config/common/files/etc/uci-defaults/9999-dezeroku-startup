@@ -1,2 +1,0 @@
-chmod +x /etc/init.d/dezeroku_startup
-/etc/init.d/dezeroku_startup enable
