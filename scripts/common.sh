@@ -106,7 +106,7 @@ function parse_env_args() {
 	echoerr "REPRODUCE_UPSTREAM_BUILD=${REPRODUCE_UPSTREAM_BUILD}"
 
 	# Example file for reference
-	# shellcheck source=build/config/mainrouter/variables
+	# shellcheck source=build/config/example/variables
 	. "${DEVICE_ENV_FILE}"
 
 	if [ -z "${BUILDDIR:-}" ]; then
