@@ -35,7 +35,7 @@ function dump_file() {
 if [ -n "${SCRIPTS_VERSION}" ]; then
 	echo SCRIPTS_VERSION="${SCRIPTS_VERSION}"
 else
-	echo SCRIPTS_VERSION="$(cd "${SCRIPTS_DIR}" && git describe HEAD)"
+	echo SCRIPTS_VERSION="$(cd "${SCRIPTS_DIR}" && git describe HEAD --always)"
 fi
 if [ -n "${SCRIPTS_COMMIT}" ]; then
 	echo SCRIPTS_COMMIT="${SCRIPTS_COMMIT}"

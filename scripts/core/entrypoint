@@ -3,7 +3,7 @@
 set -e
 
 # For the version file generation
-SCRIPTS_VERSION="$(cd "${SCRIPTS_DIR}" && git describe HEAD)"
+SCRIPTS_VERSION="$(cd "${SCRIPTS_DIR}" && git describe HEAD --always)"
 export SCRIPTS_VERSION
 SCRIPTS_COMMIT="$(cd "${SCRIPTS_DIR}" && git rev-parse HEAD)"
 export SCRIPTS_COMMIT
