@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# This script clones git repositories and obtains packages feeds.
+# Templating uci files is also done as part of this file.
+
+ROOT_DIR="$(readlink -f "$(dirname "$0")")/.."
+pushd "$ROOT_DIR" || exit 1
+
+export DEVICE=example
+
+time ONLY_INITIALIZE_WORKSPACE=true ./scripts/core/entrypoint

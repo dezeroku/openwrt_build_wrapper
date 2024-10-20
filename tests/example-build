@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# This script builds an image for 'example' device and thus ensures that
+# all the build steps are OK. It does not require Internet connection.
+# Requires 'example-fetch' to be run first
+
+ROOT_DIR="$(readlink -f "$(dirname "$0")")/.."
+pushd "$ROOT_DIR" || exit 1
+
+export DEVICE=example
+
+time SKIP_DOWNLOADS=true ./scripts/core/entrypoint
