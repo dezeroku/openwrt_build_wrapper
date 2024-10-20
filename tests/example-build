@@ -3,6 +3,7 @@
 # This script builds an image for 'example' device and thus ensures that
 # all the build steps are OK. It does not require Internet connection.
 # Requires 'example-fetch' to be run first
+# It's meant to be used for regular development
 
 ROOT_DIR="$(readlink -f "$(dirname "$0")")/.."
 pushd "$ROOT_DIR" || exit 1
