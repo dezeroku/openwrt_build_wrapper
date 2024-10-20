@@ -6,7 +6,7 @@ SCRIPTS_DIR="$(readlink -f "$(dirname "$0")")/.."
 # shellcheck source=build/scripts/common.sh
 . "${SCRIPTS_DIR}/common.sh"
 
-cd "${SCRIPTS_DIR}/../docker-setup/"
+cd "${SCRIPTS_DIR}/../docker/"
 docker build -t openwrt-builder .
 
 if [[ "${DOCKER_BUILD_DEV_IMAGE:-}" == "true" ]]; then

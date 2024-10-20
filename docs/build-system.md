@@ -2,7 +2,7 @@ TODO: clean up this file
 
 # Build Environment
 
-To get the best results, a debian based environment is built, Dockerfile for which is kept in `docker-setup` directory.
+To get the best results, a debian based environment is built, Dockerfile for which is kept in `docker` directory.
 The image is very similar to the official build env.
 
 ## Build

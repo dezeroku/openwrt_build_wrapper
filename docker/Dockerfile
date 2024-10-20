@@ -2,7 +2,7 @@
 # At the time of writing it was based on 85ffd9a27da104698b3ee433aaf0ffb0cb13504e hash
 # It also includes `sccache`, `gomplate` and `dropbearkey`
 
-FROM rust:1.74.0 as sccache-build
+FROM rust:1.74.0 AS sccache-build
 
 RUN apt-get update && \
         apt-get install -y musl-tools
