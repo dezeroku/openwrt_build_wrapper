@@ -26,19 +26,6 @@ As `ccache` needs custom OpenWRT patches to work properly, setting it on system-
 To resolve this problem, use `sccache` on system-host-level (e.g. to compile tools) and `ccache` internally in OpenWRT.
 This is already handled in the Docker container.
 
-## Comparing UCI configuration
-
-TODO: obsolete this
-
-For the sake of reproducibility (avoiding issues with glibc matching), you can build `uci-runner` docker image with `scripts/utils/build-uci-host`.
-The image has `uci` available as `/usr/local/bin/uci`.
-
-Using `scripts/utils/get-uci-config` script it's possible to retrieve the UCI default values from built image.
-When such a default config is obtained, it's easy to calculate diff between the config currently in use on the router and the default.
-
-`scripts/utils/diff-uci-configs` allows you to calculate a diff showing entries that are present in one file (the one that's meant to land on your device) and not present in the second one (the one that's default).
-Thanks to this mechanism you can keep only a list of entries that are custom to your config and not provided by default.
-
 ## OpenWRT updates
 
 TODO: move this section to a better place
