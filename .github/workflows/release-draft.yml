@@ -1,0 +1,20 @@
+---
+name: Draft the Release
+
+on:
+  push:
+    tags:
+      - "*"
+jobs:
+  gh_release_draft:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create a Github Release draft
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{github.ref_name}}
+          draft: true
+          body: |
+            This is the release of tag ${{github.ref_name}}
