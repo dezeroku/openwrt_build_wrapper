@@ -24,7 +24,7 @@ CONFIG_BUILDINFO_URL=$(grep -o "\[config.orig\]\(.*\)" <"$(dirname "${DEVICE_ENV
 
 curl "${CONFIG_BUILDINFO_URL}" >"${DEVICE_CONFIG_FILE}.orig"
 
-BUILDDIR="$(readlink -f "${SCRIPTS_DIR}/../builds/openwrt-${DEVICE}-openwrt-update-${NEW_VERSION}")"
+BUILDDIR="${BUILDDIR}-openwrt-update-${NEW_VERSION}"
 export BUILDDIR
 
 echoerr "Using BUILDDIR: ${BUILDDIR}"
