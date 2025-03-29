@@ -42,8 +42,7 @@ set dhcp.{{ print $sanitized_name }}.ip='{{ $config.ip }}'
 set dhcp.{{ print $sanitized_name }}.name='{{ $name }}'
 {{- end }}
 
-{{ range $name, $config := .dhcp.addresses }}
-{{ $sanitized_name := strings.ReplaceAll "." "_" $name }}
+{{ range $name, $config := coll.Merge .dhcp.addresses_ha .dhcp.addresses }}
 {{- range $config }}
 add_list dhcp.@dnsmasq[0].address='/{{ print $name }}/{{ . }}'
 {{- end }}

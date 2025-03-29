@@ -1,2 +1,0 @@
-chmod +x /etc/init.d/openwrt_build_wrapper_startup
-/etc/init.d/openwrt_build_wrapper_startup enable

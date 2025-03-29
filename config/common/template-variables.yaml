@@ -113,6 +113,16 @@ dhcp:
 
   # https://openwrt.org/docs/guide-user/base-system/dhcp_configuration#a_and_aaaa_rr
   addresses: {}
+  #   example:
+  #     - 192.168.1.21
+  #     - 192.168.1.22
+
+  # Similar to the above 'addresses', but actively (every minute) checks if the IPs are accessible (ping)
+  # and updates the list accordingly.
+  # This is especially useful when you have e.g. multiple LBs serving the same services and want to be
+  # able to automatically remove the broken nodes from DNS.
+  # NOTE: if same key is defined in both addresses and addresses_ha, addresses_ha takes precedence
+  addresses_ha: {}
 #   example:
 #     - 192.168.1.21
 #     - 192.168.1.22
