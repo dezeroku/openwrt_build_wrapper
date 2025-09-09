@@ -15,4 +15,5 @@ CUR_DIR="$PWD" SCRIPTS_DIR="$SCRIPTS_DIR" DOCKER_IMAGE=openwrt-builder-dev INTER
     cd ${CUR_DIR} && \
     . ${SCRIPTS_DIR}/common.sh && \
     parse_env_args && \
+    if [ -d "${BUILDDIR}" ]; then cd "${BUILDDIR}"; fi && \
     bash'
