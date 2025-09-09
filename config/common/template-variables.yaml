@@ -166,3 +166,9 @@ node_exporter: {}
 # Don't use it if it can be avoided, it's just
 # copy-pasted into one of the startup scripts
 custom_commands: ""
+
+# This is a placeholder for scripting
+# that doesn't really suit any other place
+# Contrary to the commands above, these ones will run every time
+# the device is rebooted
+custom_commands_persistent: ""
