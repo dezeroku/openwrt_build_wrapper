@@ -9,11 +9,17 @@ echo "DONE"
 
 # shellcheck disable=SC1054,SC1083
 {{- if .letsencrypt.enabled }}
-# Wait for the internet connection with 10 minutes timeout
-ping -c 1 -W 600 1.1.1.1
+# Wait for the internet connection with 10 minutes max timeout total
+# Includes a dirty hack to give some time for IP to be obtained via DHCP
+# TODO: a cleaner way for testing that, without some crazy logic?
+if ! ping -c 1 -W 540 1.1.1.1; then
+	sleep 60
+fi
 
-echo "Starting acme"
-/etc/init.d/acme start
+echo "Trigger manual renewal of the cert"
+# This will not refresh the cert if it's long before the expiration date,
+# thus it's safe to run on every boot
+/etc/init.d/acme renew
 
 # shellcheck disable=SC2017,SC2016
 if [ ! -f '/etc/ssl/acme/{{ .hostname }}.{{ .letsencrypt.domain }}.crt' ]; then
