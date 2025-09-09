@@ -33,4 +33,8 @@ ONLY_INITIALIZE_WORKSPACE=true "${SCRIPTS_DIR}/core/entrypoint"
 
 "${SCRIPTS_DIR}/utils/generate-diffconfig" >"${DEVICE_CONFIG_FILE}"
 
+# Fix up download URL that's kept from the old version by default
+new_version="$(cat "${DEVICE_CONFIG_FILE}.orig" | grep CONFIG_VERSION_REPO= | cut -d "=" -f2)"
+sed "s#CONFIG_VERSION_REPO=.*#CONFIG_VERSION_REPO=${new_version}#" -i "${DEVICE_CONFIG_FILE}"
+
 echoerr "Now check the modified ${DEVICE_CONFIG_FILE} and ${DEVICE_CONFIG_FILE}.orig for changes and run the build as usual"
