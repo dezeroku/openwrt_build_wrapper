@@ -1,37 +1,35 @@
-uci batch << EOI
-
 # Global options
 {{- if has .network.globals "ula_prefix" }}
-set network.globals.ula_prefix='{{ .network.globals.ula_prefix }}'
+uci set network.globals.ula_prefix='{{ .network.globals.ula_prefix }}'
 {{- end }}
 {{- if has .network.globals "packet_steering" }}
 {{- if .network.globals.packet_steering }}
-set network.globals.packet_steering='1'
+uci set network.globals.packet_steering='1'
 {{ else }}
-set network.globals.packet_steering='0'
+uci set network.globals.packet_steering='0'
 {{- end }}
 {{- end }}
 
 {{- if has . "bridge_config" }}
-del network.@device[0].ports
+uci del network.@device[0].ports
 {{- range .bridge_config.ports }}
-add_list network.@device[0].ports='{{ . }}'
+uci add_list network.@device[0].ports='{{ . }}'
 {{- end }}
 {{- if .bridge_config.empty }}
-set network.@device[0].bridge_empty='1'
+uci set network.@device[0].bridge_empty='1'
 {{ else }}
-set network.@device[0].bridge_empty='0'
+uci set network.@device[0].bridge_empty='0'
 {{- end }}
 {{- end }}
 
 # Set up VLANs
 {{ range $name, $config := .networks }}
 {{- if has $config "vlan" }}
-set network.bridge_vlan_{{ print $name }}='bridge-vlan'
-set network.bridge_vlan_{{ print $name }}.device='{{ $config.device }}'
-set network.bridge_vlan_{{ print $name }}.vlan='{{ $config.vlan.id }}'
+uci set network.bridge_vlan_{{ print $name }}='bridge-vlan'
+uci set network.bridge_vlan_{{ print $name }}.device='{{ $config.device }}'
+uci set network.bridge_vlan_{{ print $name }}.vlan='{{ $config.vlan.id }}'
 {{- range $config.vlan.ports }}
-add_list network.bridge_vlan_{{ print $name }}.ports='{{ . }}'
+uci add_list network.bridge_vlan_{{ print $name }}.ports='{{ . }}'
 {{- end }}
 {{- end }}
 {{ end }}
@@ -39,31 +37,36 @@ add_list network.bridge_vlan_{{ print $name }}.ports='{{ . }}'
 # Set up networks
 {{ range $name, $config := .networks }}
 # delete network.{{ print $name }}
-set network.{{ print $name }}=interface
-set network.{{ print $name }}.proto='{{ $config.proto }}'
+uci set network.{{ print $name }}=interface
+uci set network.{{ print $name }}.proto='{{ $config.proto }}'
 {{- if eq $config.proto "static" }}
-set network.{{ print $name }}.ipaddr='{{ $config.ipaddr }}'
-set network.{{ print $name }}.gateway='{{ $config.gateway }}'
-set network.{{ print $name }}.netmask='{{ $config.netmask }}'
+uci set network.{{ print $name }}.ipaddr='{{ $config.ipaddr }}'
+uci set network.{{ print $name }}.gateway='{{ $config.gateway }}'
+uci set network.{{ print $name }}.netmask='{{ $config.netmask }}'
 {{- end }}
 {{- if has $config "vlan" }}
-set network.{{ print $name }}.device='{{ $config.device }}.{{ $config.vlan.id }}'
-{{ else }}
-set network.{{ print $name }}.device='{{ $config.device }}'
+uci set network.{{ print $name }}.device='{{ $config.device }}.{{ $config.vlan.id }}'
+{{- else }}
+uci set network.{{ print $name }}.device='{{ $config.device }}'
+{{- end }}
+{{- if has $config "ip6assign" }}
+uci set network.{{ print $name }}.ip6assign='{{ $config.ip6assign }}'
+{{- else }}
+# Do not fail, but still let us know something is off
+uci del network.{{ print $name }}.ip6assign || true
 {{- end }}
 {{- if has $config "type" }}
-set network.{{ print $name }}.type='{{ $config.type }}'
+uci set network.{{ print $name }}.type='{{ $config.type }}'
 {{- end }}
 {{- if has $config "dns" }}
-del network.{{ print $name }}.dns
+uci del network.{{ print $name }}.dns
 {{- range $config.dns }}
-add_list network.{{ print $name }}.dns='{{ . }}'
+uci add_list network.{{ print $name }}.dns='{{ . }}'
 {{- end }}
 {{- end }}
 {{ end }}
 
-commit network
-EOI
+uci commit network
 
 /etc/init.d/network restart
 if [ -f /etc/init.d/odhcpd ]; then

@@ -44,6 +44,9 @@ uci set firewall.{{ print $name }}.name='{{ print $name }}'
   {{- if has $config "src" }}
 uci set firewall.{{ print $name }}.src='{{ $config.src }}'
   {{- end }}
+  {{- if has $config "family" }}
+uci set firewall.{{ print $name }}.family='{{ $config.family }}'
+  {{- end }}
   {{- if has $config "src_ip" }}
     {{- range $config.src_ip }}
 uci add_list firewall.{{ print $name }}.src_ip='{{ . }}'
