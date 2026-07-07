@@ -42,7 +42,7 @@ networks: {}
 #    type: bridge
 #    # If set to true, mdns requests from the network
 #    # will be broadcasted to the different ones
-#    # This setting requires a separate firewall rule to work properly
+#    # Required fireall rule will be created automatically
 #    broadcast_mdns: false
 #    collect_dns_statistics: false
 #    firewall:

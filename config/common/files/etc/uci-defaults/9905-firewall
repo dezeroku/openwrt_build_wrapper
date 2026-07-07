@@ -17,6 +17,17 @@ uci set firewall.{{ print $name }}_to_{{ . }}_forwarding.src='{{ print $name }}'
 uci set firewall.{{ print $name }}_to_{{ . }}_forwarding.dest='{{ . }}'
 {{- end }}
 {{- end }}
+
+{{- if has $config "broadcast_mdns" }}
+uci set firewall.{{ print $name }}_broadcast_mdns=rule
+uci set firewall.{{ print $name }}_broadcast_mdns.name='{{ $name }}_broadcast_mdns'
+uci set firewall.{{ print $name }}_broadcast_mdns.proto='udp'
+uci set firewall.{{ print $name }}_broadcast_mdns.src='{{ $name }}'
+uci set firewall.{{ print $name }}_broadcast_mdns.src_port='5353'
+uci set firewall.{{ print $name }}_broadcast_mdns.dest_port='5353'
+uci set firewall.{{ print $name }}_broadcast_mdns.target='ACCEPT'
+{{- end }}
+
 {{- end }}
 {{- end }}
 
